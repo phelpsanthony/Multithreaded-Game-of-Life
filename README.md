@@ -1,7 +1,8 @@
 # Multi-Species Game of Life
 
 A **C++** implementation of Conway’s Game of Life extended to support **multiple species** on a 2D grid, with **real-time OpenGL visualization**. Each species is represented by a different color, and the simulation runs efficiently using **multithreading**.
-This implementation uses CPU multithreading. This is an assignment for COMP 436 Multicore programming.
+This implementation uses CPU multithreading. This is an assignment for COMP 426 Multicore programming at 
+Concordia University.
 ---
 
 ## Features
