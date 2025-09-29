@@ -22,7 +22,7 @@ This implementation uses CPU multithreading. This is an assignment for COMP 436 
 
 ## Requirements
 
-- **C++17** or higher
+- **C++20** or higher
 - **OpenGL**, **GLEW**, and **FreeGLUT**
 - CMake (for building)
 
