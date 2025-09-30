@@ -3,6 +3,8 @@
 //
 
 #include "Control.h"
+#include <chrono>
+using namespace chrono;
 
 Control::Control(int height, int width, int num_of_species, OpenGLHandler* opengl_handler, mutex* m, condition_variable* c,
     bool* frame_ready)
@@ -57,8 +59,16 @@ void Control::run() {
         }
     }
 
+    // variables to calculate the average performance
+    int total=0;
+    int counter=0;
+    float average=0;
+
     // At this point the initialization is finished and the control thread can enter it's main loop
     while (true) {
+        //Start timer to be able to measure performance
+        auto start = high_resolution_clock::now(); // start timing
+
         // Change ready flag to true so the worker threads can se that they can proceed
         {
             lock_guard<mutex> lock(mtx);
@@ -86,6 +96,18 @@ void Control::run() {
             frame_ready = true;
         }
         frame_cv.notify_one();
+
+        // Finish timing the iteration for performance measurement
+        auto end = high_resolution_clock::now();
+        auto duration = duration_cast<milliseconds>(end - start).count();
+        total += duration;
+        counter++;
+        average = total/counter;
+
+        if (counter == 100) {
+            cout << "Average Iteration  after the first 100 iterations took " << average << " ms" << endl;
+        }
+
 
         // Pause main thread for (1/30) seconds
         this_thread::sleep_for(33ms);
