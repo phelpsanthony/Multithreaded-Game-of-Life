@@ -7,6 +7,7 @@
 #include "Cell.h"
 #include "Worker.h"
 #include "Control.h"
+#include <tbb/parallel_for.h>
 
 using namespace std;
 
@@ -45,6 +46,7 @@ int main(int argc, char** argv) {
     opengl_handler_ptr = &opengl_handler;
 
     // Initialize Control thread
+    // TODO: Number of threads should be random
     Control game_of_life(HEIGHT, WIDTH, 5, &opengl_handler, &frame_mutex, &frame_cv, &frame_ready);
     game_of_life_ptr = &game_of_life;
     game_of_life.start();

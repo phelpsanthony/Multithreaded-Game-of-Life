@@ -3,6 +3,10 @@
 //
 
 #include "Worker.h"
+#include <tbb/parallel_for.h>
+#include<tbb/blocked_range2d.h>
+
+using namespace tbb;
 
 Worker::Worker(int sid, Grid*& curr, Grid*& next,
                mutex& m, condition_variable& cv,
@@ -86,19 +90,21 @@ void Worker::run() {
         cv.wait(lock, [&] {return ready;});
         lock.unlock();
 
-        // Iterate over the current grid to compute the next state of each cell for the species of the thread
-        for (int row=0; row < current_grid->getHeight(); row++) {
-            for (int col=0; col < current_grid->getWidth(); col++) {
+        // Parallelize over the grid using TBB
+        parallel_for(
+            blocked_range2d<int>(0, current_grid->getHeight(), 0, current_grid->getWidth()),
+                [&](const blocked_range2d<int>& r) {
+                for (int i = r.rows().begin(); i < r.rows().end(); i++) {
+                    for (int j = r.cols().begin(); j < r.cols().end(); j++) {
+                        Cell& cell = current_grid->getCell(i, j);
+                        if (cell.getSpeciesId() != species_id) continue;
 
-                Cell& cell = current_grid->getCell(row, col);
-
-                if (cell.getSpeciesId() != species_id) continue;
-
-                bool next_alive = computeNextState(row, col);
-                next_grid->setCell(row, col, species_id, next_alive);
-
-            }
-        }
+                        bool next_alive = computeNextState(i, j);
+                        next_grid->setCell(i, j, species_id, next_alive);
+                    }
+                }
+            } // end lambda
+        ); // End parallel_for
 
         sync.arrive_and_wait();
     }
