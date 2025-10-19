@@ -60,14 +60,15 @@ void Control::run() {
     }
 
     // variables to calculate the average performance
-    int total=0;
-    int counter=0;
-    float average=0;
+    long long comp_sum = 0;
+    long long loop_sum = 0;
+    int frame_count = 0;
+    const int avg_interval = 100; // print averages every 100 frames
 
     // At this point the initialization is finished and the control thread can enter it's main loop
     while (true) {
         //Start timer to be able to measure performance
-        auto start = high_resolution_clock::now(); // start timing
+        auto loop_start = high_resolution_clock::now(); // start timing
 
         // Change ready flag to true so the worker threads can se that they can proceed
         {
@@ -78,6 +79,10 @@ void Control::run() {
 
         // Should wait here for all the worker threads to finish computing next states for their species
         sync.arrive_and_wait();
+
+        auto comp_end = high_resolution_clock::now();
+        auto computation_time = duration_cast<milliseconds>(comp_end - loop_start).count();
+
 
         // Make the ready flag false again because all the workers shouldn't continue
         {
@@ -95,22 +100,29 @@ void Control::run() {
             lock_guard<mutex> lock(frame_mutex);
             frame_ready = true;
         }
-        frame_cv.notify_one();
+        frame_cv.notify_all();
 
-        // Finish timing the iteration for performance measurement
-        auto end = high_resolution_clock::now();
-        auto duration = duration_cast<milliseconds>(end - start).count();
-        total += duration;
-        counter++;
-        average = total/counter;
+        // End total loop timer
+        auto loop_end = high_resolution_clock::now();
+        auto loop_time = duration_cast<milliseconds>(loop_end - loop_start).count();
 
-        if (counter == 100) {
-            cout << "Average Iteration  after the first 100 iterations took " << average << " ms" << endl;
+        // Accumulate for averaging
+        comp_sum += computation_time;
+        loop_sum += loop_time;
+        frame_count++;
+
+        if (frame_count % avg_interval == 0) {
+            std::cout << "Average of last " << avg_interval << " frames"
+                      << " | computation: " << (comp_sum / avg_interval) << "ms"
+                      << " | total loop: " << (loop_sum / avg_interval) << "ms"
+                      << std::endl;
+            comp_sum = 0;
+            loop_sum = 0;
         }
 
 
         // Pause main thread for (1/30) seconds
-        this_thread::sleep_for(33ms);
+        // this_thread::sleep_for(33ms);
     }
 
 }
