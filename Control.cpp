@@ -70,7 +70,7 @@ void Control::run() {
     int frame_count = 0;
     long long comp_sum = 0;
     long long loop_sum = 0;
-    const int avg_interval = 10; // average every 10 frames
+    const int avg_interval = 100; // average every 10 frames
 
     // At this point the initialization is finished and the control thread can enter it's main loop
     while (true) {
@@ -114,7 +114,7 @@ void Control::run() {
         frame_cv.notify_all();
 
         // TODO: Add delay based on performance not hardcoded to 1/30 seconds
-        // For soem reason the while loop takes 150 ms or so so no point in a delay right now
+        // For some reason the while loop takes 150 ms or so so no point in a delay right now
 
         auto loop_end = high_resolution_clock::now(); // end total loop timer
         auto loop_time = duration_cast<milliseconds>(loop_end - loop_start).count();
